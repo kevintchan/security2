@@ -1,0 +1,13 @@
+a) description of procedure
+
+1. add the private key to the SSL list of RSA keys to use in decrypting packets.
+
+2. Edit > Preferences > Protocols > SSL
+
+3. Add two entries, one for each source IP address (172.16.23.205 and 172.16.23.108). Source port:443 and protocol:HTTP.
+
+4. Once applied, inspect decrypted packets and found secret.
+
+b) 
+
+c) 
