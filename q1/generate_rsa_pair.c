@@ -142,7 +142,7 @@ int my_better_rand_bytes(unsigned char *buf, int num_bytes)
 }
 
 // For the standard C rand I need to seed it with srand()...
-void seed_randomness()
+void seed_randomness(int x)
 {
     // my_better_rand_bytes needs a seed for my random function. I need
     // something random and unguessable... how about the system time when I
@@ -153,14 +153,14 @@ void seed_randomness()
     
     unsigned int time_in_sec = t.tv_sec;     // Current seconds since epoc (midnight, jan 1, 1970)
     unsigned int time_micro_sec = t.tv_usec; // Number of microseconds this second
-    unsigned int seed;
+    unsigned int seed = x;
 
     // Set the seed to the number of seconds since epoc
-    seed = time_in_sec;
+    //seed = time_in_sec;
 
     // Add to that the number of milli-seconds
-    seed = time_micro_sec >> 7;
+    //seed = time_micro_sec >> 7;
     
-    srand(seed); // Unguessable!
+    srand(x); // Unguessable!
 }
 
