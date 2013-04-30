@@ -1,0 +1,1 @@
+The bug in generate_rsa_pair was 146:  seed = time_micro_sec >> 7; This line is faulty because it overwrites the seed value with the particular microsecond of the second; we determined that there are 1E6 microseconds per second. Since that value is actually bit-shifted by 7, the number of possible seeds is reduced down to 1E6/(2^7), or 7812. 
