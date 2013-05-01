@@ -23,14 +23,21 @@ int main (int argc, char *argv[])
     // Those openssl guys are CHUMPS. Did you see that debian bug? What the
     // heck.  I don't trust them, I'm going to write my own random
     // implementation.  That way I know it will be secure.
-
-    //Get n from server_pubkey.pub
-    int iter = 1, max_iter = 7812;
-    char *server_pub_key_file = "server_pubkey.pub";
-    FILE *sp = fopen(pub_key_file, "r");
-    RSA *server_rsa = NULL;
-    server_rsa = PEM_read_RSA_PUBKEY(sp, NULL, NULL, NULL);
     
+    //Get n from server_pubkey.pub
+    int iter = 1;
+    int max_iter = 1000000 >> 7;
+    FILE *file = fopen("server_pubkey.pub", "r");
+    RSA *server_rsa = NULL;
+    server_rsa = PEM_read_RSAPublicKey(file, NULL, NULL, NULL);
+
+    printf("max iters:%d\n", max_iter);
+
+    if (server_rsa == NULL){
+	fprintf(stderr, "Could not open read server key file\n");
+	exit(1);
+    }
+
     // Hmm, in openssl lingo the way you generate random numbers is with a
     // RAND_METHOD Looks like I need to create my own RAND_METHOD structure. It
     // has a bunch of stuff in it, but the only really important parts are the
@@ -52,22 +59,27 @@ int main (int argc, char *argv[])
     // Okies I built my random method, now I just need tell openssl to use it 
     RAND_set_rand_method(&my_better_random_method);
 
-
+    // Seed my random function...
     seed_randomness(0);
+   
+    // Finally I can sleep at night.
+
+    // Create our key
     RSA *rsa = RSA_generate_key(num_bits,exponent,NULL,NULL);
+	
 
-    while (iter <= max_iter && BN_cmp(rsa->n, server_rsa->n)) {
-      // Seed my random function...
-      // Added an argument so we can fix the seed.
+    while (iter <= max_iter) {
+      printf("iter:%d\n", iter);
       seed_randomness(iter);
-
-      // Finally I can sleep at night.
-
-      // Create our key
       rsa = RSA_generate_key(num_bits,exponent,NULL,NULL);
       iter++;
+      if (BN_cmp(rsa->n, server_rsa->n) == 0) {
+	break;
+      }
     }
-
+    if (BN_cmp(rsa->n, server_rsa->n) != 0) {
+      fprintf(stderr, "Could not find n\n");
+    }
     // The RSA structure has all our important fields. n, e, d, p, q, etc.
     // struct
     //         {
@@ -142,7 +154,7 @@ int my_better_rand_bytes(unsigned char *buf, int num_bytes)
 }
 
 // For the standard C rand I need to seed it with srand()...
-void seed_randomness(int x)
+void seed_randomness(unsigned int x)
 {
     // my_better_rand_bytes needs a seed for my random function. I need
     // something random and unguessable... how about the system time when I
@@ -156,10 +168,10 @@ void seed_randomness(int x)
     unsigned int seed = x;
 
     // Set the seed to the number of seconds since epoc
-    //seed = time_in_sec;
+    seed = time_in_sec;
 
     // Add to that the number of milli-seconds
-    //seed = time_micro_sec >> 7;
+    seed = time_micro_sec >> 7;
     
     srand(x); // Unguessable!
 }
